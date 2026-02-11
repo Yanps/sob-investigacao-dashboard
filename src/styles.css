@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import 'primeicons/primeicons.css';
+@plugin "tailwindcss-primeui";
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  /* Teste rápido: deve deixar o fundo cinza-claro se o Tailwind estiver ativo */
+  @apply bg-slate-100;
+}

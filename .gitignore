@@ -1,0 +1,21 @@
+# Compiled output
+/dist
+/out-tsc
+
+# Node
+/node_modules
+npm-debug.log
+pnpm-lock.yaml
+yarn-error.log
+
+# IDEs
+.idea/
+.vscode/*
+!.vscode/settings.json
+
+# Angular
+.angular/cache
+
+# System
+.DS_Store
+Thumbs.db
