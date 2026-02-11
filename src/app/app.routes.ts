@@ -9,6 +9,16 @@ export const routes: Routes = [
     title: 'Login - SOB Dashboard',
   },
   {
+    path: '403',
+    loadComponent: () => import('./pages/forbidden/forbidden.page').then((m) => m.ForbiddenPage),
+    title: 'Acesso negado - SOB',
+  },
+  {
+    path: '404',
+    loadComponent: () => import('./pages/not-found/not-found.page').then((m) => m.NotFoundPage),
+    title: 'Não encontrado - SOB',
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/main-layout/main-layout.component').then((m) => m.MainLayoutComponent),
@@ -45,5 +55,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  { path: '**', redirectTo: '404', pathMatch: 'full' },
 ];

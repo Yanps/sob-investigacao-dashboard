@@ -39,6 +39,8 @@ export class ConversasStore {
   readonly loadingMessages = signal(false);
   readonly loadingResponses = signal(false);
   readonly error = signal<string | null>(null);
+  readonly nextCursor = signal<string | null>(null);
+  readonly listMode = signal<'all' | 'phone'>('phone');
 
   readonly conversations = this.conversationsSignal.asReadonly();
   readonly selectedConversationId = this.selectedConversationIdSignal.asReadonly();
@@ -49,10 +51,62 @@ export class ConversasStore {
     this.conversationsSignal().find((c) => c.id === this.selectedConversationIdSignal()) ?? null,
   );
 
+  private mapConversations(raw: ConversationDto[]): ConversationView[] {
+    return raw.map((c) => ({
+      ...c,
+      lastMessageAtDate: toDate(c.lastMessageAt),
+    }));
+  }
+
+  carregarTodasConversas(append = false) {
+    this.listMode.set('all');
+    if (!append) {
+      this.conversationsSignal.set([]);
+      this.selectedConversationIdSignal.set(null);
+      this.messagesSignal.set([]);
+      this.responsesSignal.set([]);
+      this.nextCursor.set(null);
+    }
+    this.loadingList.set(true);
+    this.error.set(null);
+    const status = this.statusFilter();
+    const statusParam: ConversationStatus | undefined = status === 'all' ? undefined : status;
+    const startAfter = append ? this.nextCursor() ?? undefined : undefined;
+
+    this.api
+      .listAllConversations({
+        limit: 50,
+        startAfter,
+        status: statusParam,
+        enrich: true,
+      })
+      .pipe(
+        catchError((_err) => {
+          this.error.set('Não foi possível carregar as conversas.');
+          return of({ conversations: [], nextCursor: undefined });
+        }),
+        finalize(() => this.loadingList.set(false)),
+      )
+      .subscribe((res) => {
+        const raw = res.conversations ?? [];
+        const mapped = this.mapConversations(raw);
+        if (append) {
+          this.conversationsSignal.update((prev) => [...prev, ...mapped]);
+        } else {
+          this.conversationsSignal.set(mapped.length > 0 ? mapped : MOCK_CONVERSATIONS_LIST);
+        }
+        this.nextCursor.set(res.nextCursor ?? null);
+        if (mapped.length && !append) {
+          this.selecionarConversa(mapped[0].id);
+        }
+      });
+  }
+
   buscarConversas(phone: string) {
     const trimmed = phone.trim();
     if (!trimmed) return;
 
+    this.listMode.set('phone');
     this.phone.set(trimmed);
     this.loadingList.set(true);
     this.error.set(null);
@@ -60,6 +114,7 @@ export class ConversasStore {
     this.selectedConversationIdSignal.set(null);
     this.messagesSignal.set([]);
     this.responsesSignal.set([]);
+    this.nextCursor.set(null);
 
     const status = this.statusFilter();
     const statusParam: ConversationStatus | undefined = status === 'all' ? undefined : status;
@@ -69,17 +124,15 @@ export class ConversasStore {
       .pipe(
         catchError((_err) => {
           this.error.set('Não foi possível carregar as conversas.');
-          return of<ConversationDto[]>([]);
+          return of({ conversations: [], nextCursor: undefined });
         }),
         finalize(() => this.loadingList.set(false)),
       )
-      .subscribe((list) => {
-        const raw = list.length > 0 ? list : MOCK_CONVERSATIONS_LIST;
-        const mapped: ConversationView[] = raw.map((c) => ({
-          ...c,
-          lastMessageAtDate: toDate(c.lastMessageAt),
-        }));
+      .subscribe((res) => {
+        const raw = (res.conversations ?? []).length > 0 ? res.conversations! : MOCK_CONVERSATIONS_LIST;
+        const mapped = this.mapConversations(raw);
         this.conversationsSignal.set(mapped);
+        this.nextCursor.set(res.nextCursor ?? null);
         if (mapped.length) {
           this.selecionarConversa(mapped[0].id);
         }
@@ -88,13 +141,17 @@ export class ConversasStore {
 
   atualizarStatus(status: StatusFilter) {
     this.statusFilter.set(status);
-    if (this.phone().trim()) {
+    if (this.listMode() === 'all') {
+      this.carregarTodasConversas(false);
+    } else if (this.phone().trim()) {
       this.buscarConversas(this.phone());
     }
   }
 
   selecionarConversa(id: string) {
     if (!id) return;
+    const conv = this.conversationsSignal().find((c) => c.id === id);
+    if (conv) this.phone.set(conv.phoneNumber);
     if (this.selectedConversationIdSignal() === id && this.messagesSignal().length) {
       return;
     }

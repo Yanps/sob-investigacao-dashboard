@@ -27,7 +27,7 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
       <h1 class="text-xl sm:text-2xl font-bold text-surface-900">Conversas</h1>
 
       <!-- Filtros -->
-      <p-card class="shadow-sm">
+      <p-card class="shadow-sm mb-16">
         <div class="flex flex-col md:flex-row gap-4 items-start md:items-end">
           <div class="flex-1 w-full">
             <label class="block text-sm font-medium text-surface-700 mb-1">Telefone</label>
@@ -49,7 +49,13 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
               (onChange)="onStatusChange()"
               class="w-full" />
           </div>
-          <div class="flex gap-2 w-full md:w-auto">
+          <div class="flex flex-wrap gap-2 w-full md:w-auto">
+            <p-button
+              label="Ver todas"
+              icon="pi pi-list"
+              severity="secondary"
+              (onClick)="store.carregarTodasConversas(false)"
+              styleClass="w-full md:w-auto" />
             <p-button
               label="Buscar"
               icon="pi pi-search"
@@ -64,12 +70,12 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
       </p-card>
 
       <!-- Conteúdo principal: lista + detalhes -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         <!-- Lista de conversas -->
         <div class="lg:col-span-1">
           <p-card class="shadow-sm h-full">
             <ng-template pTemplate="header">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between p-4">
                 <span class="font-semibold">Conversas</span>
                 @if (store.loadingList()) {
                   <i class="pi pi-spin pi-spinner text-sm text-surface-500"></i>
@@ -98,23 +104,43 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
                       (click)="store.selecionarConversa(c.id)">
                       <div class="flex items-center justify-between gap-2">
                         <span class="font-medium text-sm text-surface-900 truncate">
-                          {{ c.phoneNumber }}
+                          {{ c.contactName || c.phoneNumber }}
                         </span>
                         <p-tag
                           [severity]="c.status === 'active' ? 'success' : 'secondary'"
                           [value]="c.status === 'active' ? 'Ativa' : 'Encerrada'"
                           styleClass="text-xs" />
                       </div>
-                      <div class="flex items-center justify-between text-xs text-surface-500">
-                        <span>
-                          Última mensagem:
-                          {{ c.lastMessageAtDate ?? c.lastMessageAt | date: 'short' }}
-                        </span>
+                      @if (c.contactName) {
+                        <div class="text-xs text-surface-500">({{ c.phoneNumber }})</div>
+                      }
+                      @if (c.lastMessagePreview) {
+                        <p class="text-xs text-surface-600 truncate m-0">{{ c.lastMessagePreview }}</p>
+                      }
+                      @if (c.tags?.length) {
+                        <div class="flex flex-wrap gap-1 mt-0.5">
+                          @for (tag of c.tags; track tag) {
+                            <p-tag [value]="tag" severity="info" styleClass="text-xs" />
+                          }
+                        </div>
+                      }
+                      <div class="text-xs text-surface-500 mt-0.5">
+                        {{ c.lastMessageAtDate ?? c.lastMessageAt | date: 'short' }}
                       </div>
                     </button>
                   </li>
                 }
               </ul>
+              @if (store.nextCursor()) {
+                <div class="pt-2 text-center">
+                  <p-button
+                    label="Carregar mais"
+                    icon="pi pi-chevron-down"
+                    [loading]="store.loadingList()"
+                    (onClick)="onCarregarMais()"
+                    styleClass="w-full" />
+                </div>
+              }
             }
           </p-card>
         </div>
@@ -123,10 +149,10 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
         <div class="lg:col-span-2">
           <p-card class="shadow-sm h-full flex flex-col">
             <ng-template pTemplate="header">
-              <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center justify-between gap-2 p-4">
                 <div>
                   <p class="text-sm font-semibold text-surface-900 m-0">
-                    {{ store.selectedConversation()?.phoneNumber || 'Nenhuma conversa selecionada' }}
+                    {{ store.selectedConversation()?.contactName || store.selectedConversation()?.phoneNumber || 'Nenhuma conversa selecionada' }}
                   </p>
                   @if (store.selectedConversation(); as conv) {
                     <p class="text-xs text-surface-500 m-0">
@@ -226,6 +252,12 @@ export class ConversasPage {
     const phone = this.phoneInput.trim();
     if (!phone) return;
     this.store.buscarConversas(phone);
+  }
+
+  onCarregarMais() {
+    if (this.store.listMode() === 'all') {
+      this.store.carregarTodasConversas(true);
+    }
   }
 
   onStatusChange() {

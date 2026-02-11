@@ -66,7 +66,7 @@ import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
       </p-card>
 
       <!-- Geração + Busca por código -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         <!-- Geração -->
         <p-card header="Gerar códigos" class="shadow-sm lg:col-span-2">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

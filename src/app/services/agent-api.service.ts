@@ -15,6 +15,14 @@ export interface ConversationDto {
   startedAt: any;
   lastMessageAt: any;
   closedAt: any;
+  contactName?: string | null;
+  lastMessagePreview?: string | null;
+  tags?: string[];
+}
+
+export interface ConversationsListResponse {
+  conversations: ConversationDto[];
+  nextCursor?: string;
 }
 
 export interface AgentResponseDto {
@@ -44,16 +52,32 @@ export class AgentApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/api`;
 
+  listAllConversations(params?: {
+    limit?: number;
+    startAfter?: string;
+    status?: ConversationStatus;
+    enrich?: boolean;
+  }): Observable<ConversationsListResponse> {
+    const query: Record<string, string | number | boolean> = {};
+    if (params?.limit) query['limit'] = params.limit;
+    if (params?.startAfter) query['startAfter'] = params.startAfter;
+    if (params?.status) query['status'] = params.status;
+    if (params?.enrich) query['enrich'] = 'true';
+    return this.http.get<ConversationsListResponse>(`${this.base}/agent/conversations`, { params: query });
+  }
+
   getConversationsByPhone(
     phoneNumber: string,
-    params?: { limit?: number; status?: ConversationStatus },
-  ): Observable<ConversationDto[]> {
-    const query: any = {};
-    if (params?.limit) query.limit = params.limit;
-    if (params?.status) query.status = params.status;
-    return this.http.get<ConversationDto[]>(`${this.base}/agent/conversations/${encodeURIComponent(phoneNumber)}`, {
-      params: query,
-    });
+    params?: { limit?: number; startAfter?: string; status?: ConversationStatus },
+  ): Observable<ConversationsListResponse> {
+    const query: Record<string, string | number> = {};
+    if (params?.limit) query['limit'] = params.limit;
+    if (params?.startAfter) query['startAfter'] = params.startAfter;
+    if (params?.status) query['status'] = params.status;
+    return this.http.get<ConversationsListResponse>(
+      `${this.base}/agent/conversations/${encodeURIComponent(phoneNumber)}`,
+      { params: query },
+    );
   }
 
   getConversationMessages(
