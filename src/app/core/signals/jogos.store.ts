@@ -1,7 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, finalize, of } from 'rxjs';
 import { GameItem, GamesApiService } from '../../services/games-api.service';
-import { MOCK_GAMES_LIST } from '../mocks/page-mocks';
 
 export type ActiveFilter = 'all' | 'active' | 'inactive';
 
@@ -20,6 +19,7 @@ export class JogosStore {
   readonly loadingMore = signal(false);
   readonly loadingSave = signal(false);
   readonly error = signal<string | null>(null);
+  readonly saveSuccess = signal(false);
 
   readonly selectedGame = signal<GameItem | null>(null);
 
@@ -51,8 +51,7 @@ export class JogosStore {
         finalize(() => this.loadingList.set(false)),
       )
       .subscribe((res) => {
-        const list = res.games ?? [];
-        this.gamesSignal.set(list.length > 0 ? list : MOCK_GAMES_LIST);
+        this.gamesSignal.set(res.games ?? []);
         this.nextCursor.set(res.nextCursor ?? null);
       });
   }
@@ -98,6 +97,7 @@ export class JogosStore {
     }
     this.loadingSave.set(true);
     this.error.set(null);
+    this.saveSuccess.set(false);
 
     const existingId = (game as GameItem).id;
     const request$ = existingId
@@ -121,6 +121,7 @@ export class JogosStore {
           this.gamesSignal.set([saved, ...list]);
         }
         this.selectedGame.set(saved);
+        this.saveSuccess.set(true);
       });
   }
 }

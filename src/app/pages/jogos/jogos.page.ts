@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -174,7 +174,7 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
     </div>
   `,
 })
-export class JogosPage {
+export class JogosPage implements OnInit {
   readonly store = inject(JogosStore);
 
   typeFilterInput = '';
@@ -191,6 +191,18 @@ export class JogosPage {
     { label: 'Ativos', value: 'active' satisfies ActiveFilter },
     { label: 'Inativos', value: 'inactive' satisfies ActiveFilter },
   ];
+
+  constructor() {
+    effect(() => {
+      if (this.store.saveSuccess()) {
+        this.dialogVisible = false;
+      }
+    });
+  }
+
+  ngOnInit() {
+    this.store.carregarPrimeiraPagina();
+  }
 
   abrirNovo() {
     this.selectedGameId = null;
@@ -222,9 +234,6 @@ export class JogosPage {
       type: this.formType,
       active: this.formActive,
     } as any);
-    if (!this.store.loadingSave()) {
-      this.dialogVisible = false;
-    }
   }
 }
 
