@@ -239,7 +239,7 @@ import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.s
                     </td>
                     <td class="text-xs">{{ code.usedByName || '-' }}</td>
                     <td class="text-xs">{{ code.usedByEmail || '-' }}</td>
-                    <td class="text-xs">{{ code.usedByPhoneNumber || '-' }}</td>
+                    <td class="text-xs">{{ formatPhone(code.usedByPhoneNumber) }}</td>
                     <td class="text-xs">
                       {{ code.usedAt ? (code.usedAt | date: 'dd/MM/yyyy HH:mm') : '-' }}
                     </td>
@@ -425,5 +425,26 @@ export class CodigosPage implements OnInit {
         this.loadingDetailsCodes.set(false);
       },
     });
+  }
+
+  formatPhone(phone: string | undefined | null): string {
+    if (!phone) return '-';
+    let digits = phone.replace(/\D/g, '');
+    // Remove código do país 55 se presente
+    if (digits.length === 13 && digits.startsWith('55')) {
+      digits = digits.slice(2);
+    }
+    if (digits.length === 12 && digits.startsWith('55')) {
+      digits = digits.slice(2);
+    }
+    // Celular: (XX) XXXXX-XXXX
+    if (digits.length === 11) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    }
+    // Fixo: (XX) XXXX-XXXX
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    }
+    return phone;
   }
 }

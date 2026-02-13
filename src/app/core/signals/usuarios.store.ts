@@ -1,7 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, finalize, of } from 'rxjs';
 import { Customer, UsersApiService, UserDetailResponse } from '../../services/users-api.service';
-import { MOCK_CUSTOMERS_LIST } from '../mocks/page-mocks';
 
 @Injectable({ providedIn: 'root' })
 export class UsuariosStore {
@@ -19,6 +18,7 @@ export class UsuariosStore {
   readonly loadingDetail = signal(false);
   readonly loadingChangePhone = signal(false);
   readonly error = signal<string | null>(null);
+  readonly changePhoneError = signal<string | null>(null);
 
   readonly selectedPhone = signal<string | null>(null);
   readonly userDetail = signal<UserDetailResponse | null>(null);
@@ -45,7 +45,7 @@ export class UsuariosStore {
       )
       .subscribe((res) => {
         const list = res.customers ?? [];
-        this.customersSignal.set(list.length > 0 ? list : MOCK_CUSTOMERS_LIST);
+        this.customersSignal.set(list);
         this.nextCursor.set(res.nextCursor ?? null);
       });
   }
@@ -81,6 +81,8 @@ export class UsuariosStore {
   }
 
   carregarDetalhe(phone: string) {
+    if (this.loadingDetail()) return;
+
     this.loadingDetail.set(true);
     this.error.set(null);
     this.userDetail.set(null);
@@ -103,24 +105,26 @@ export class UsuariosStore {
     const trimmedEmail = email.trim();
     const trimmedPhone = newPhone.trim();
     if (!trimmedEmail || !trimmedPhone) {
-      this.error.set('Email e novo telefone são obrigatórios.');
+      this.changePhoneError.set('Email e novo telefone são obrigatórios.');
       return;
     }
 
     this.loadingChangePhone.set(true);
-    this.error.set(null);
+    this.changePhoneError.set(null);
 
     this.api
       .changePhone({ email: trimmedEmail, newPhoneNumber: trimmedPhone })
       .pipe(
-        catchError((_err) => {
-          this.error.set('Não foi possível alterar o telefone.');
+        catchError((err) => {
+          const msg = err?.error?.message || 'Não foi possível alterar o telefone.';
+          this.changePhoneError.set(msg);
           return of({ success: false, message: '' });
         }),
         finalize(() => this.loadingChangePhone.set(false)),
       )
       .subscribe((res) => {
         if (res.success) {
+          this.changePhoneError.set(null);
           this.selectedPhone.set(trimmedPhone);
           this.carregarDetalhe(trimmedPhone);
         }
