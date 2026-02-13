@@ -11,6 +11,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
 import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
 import { GamesApiService, GameItem } from '../../services/games-api.service';
+import { CodesApiService, BatchItem } from '../../services/codes-api.service';
 
 @Component({
   selector: 'app-codigos-page',
@@ -35,14 +36,16 @@ import { GamesApiService, GameItem } from '../../services/games-api.service';
       <p-card class="shadow-sm">
         <div class="flex flex-col lg:flex-row gap-4">
           <div class="flex-1">
-            <label class="block text-sm font-medium text-surface-700 mb-1">Lote (batchId)</label>
-            <input
-              pInputText
-              type="text"
-              [(ngModel)]="batchIdInput"
-              (ngModelChange)="store.batchId.set(batchIdInput)"
-              placeholder="Ex: batch_..."
-              class="w-full" />
+            <label class="block text-sm font-medium text-surface-700 mb-1">Lote</label>
+            <p-dropdown
+              [options]="batchOptions()"
+              [(ngModel)]="selectedBatchId"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="onBatchChange()"
+              placeholder="Selecione um lote"
+              styleClass="w-full"
+              [loading]="loadingBatches()" />
           </div>
 
           <div class="flex flex-col gap-2">
@@ -104,6 +107,7 @@ import { GamesApiService, GameItem } from '../../services/games-api.service';
                 type="text"
                 [(ngModel)]="batchIdGenerateInput"
                 (ngModelChange)="store.formBatchId.set(batchIdGenerateInput)"
+                placeholder="Deixe em branco para gerar automaticamente"
                 class="w-full" />
             </div>
           </div>
@@ -235,9 +239,12 @@ import { GamesApiService, GameItem } from '../../services/games-api.service';
 export class CodigosPage implements OnInit {
   readonly store = inject(CodigosStore);
   private readonly gamesApi = inject(GamesApiService);
+  private readonly codesApi = inject(CodesApiService);
 
   readonly games = signal<GameItem[]>([]);
   readonly loadingGames = signal(true);
+  readonly batches = signal<BatchItem[]>([]);
+  readonly loadingBatches = signal(true);
 
   readonly gameOptions = computed(() => {
     return this.games().map((g) => ({
@@ -246,7 +253,18 @@ export class CodigosPage implements OnInit {
     }));
   });
 
-  batchIdInput = '';
+  readonly batchOptions = computed(() => {
+    const opts = [{ label: 'Todos os lotes', value: '' }];
+    for (const b of this.batches()) {
+      opts.push({
+        label: `${b.batchId} (${b.count} códigos)`,
+        value: b.batchId,
+      });
+    }
+    return opts;
+  });
+
+  selectedBatchId = '';
   usedFilter: UsedFilter = 'all';
   quantityInput = 1;
   selectedGameId = '';
@@ -267,8 +285,13 @@ export class CodigosPage implements OnInit {
     this.store.formGameId.set(this.selectedGameId);
   }
 
+  onBatchChange() {
+    this.store.batchId.set(this.selectedBatchId);
+  }
+
   ngOnInit() {
     this.loadGames();
+    this.loadBatches();
     // Carrega a primeira página automaticamente ao entrar na rota /codigos
     this.store.buscarPrimeiraPagina();
   }
@@ -283,6 +306,20 @@ export class CodigosPage implements OnInit {
       error: () => {
         this.games.set([]);
         this.loadingGames.set(false);
+      },
+    });
+  }
+
+  loadBatches() {
+    this.loadingBatches.set(true);
+    this.codesApi.listBatches().subscribe({
+      next: (res) => {
+        this.batches.set(res?.batches ?? []);
+        this.loadingBatches.set(false);
+      },
+      error: () => {
+        this.batches.set([]);
+        this.loadingBatches.set(false);
       },
     });
   }

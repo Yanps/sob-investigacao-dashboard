@@ -34,6 +34,15 @@ export interface GetCodeResponse {
   code: CodeItem;
 }
 
+export interface BatchItem {
+  batchId: string;
+  count: number;
+}
+
+export interface BatchesListResponse {
+  batches: BatchItem[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CodesApiService {
   private readonly http = inject(HttpClient);
@@ -54,6 +63,10 @@ export class CodesApiService {
 
   getByCode(code: string): Observable<GetCodeResponse> {
     return this.http.get<GetCodeResponse>(`${this.base}/codes/${encodeURIComponent(code.trim())}`);
+  }
+
+  listBatches(): Observable<BatchesListResponse> {
+    return this.http.get<BatchesListResponse>(`${this.base}/codes/batches`);
   }
 }
 
