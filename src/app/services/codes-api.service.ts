@@ -9,8 +9,11 @@ export interface CodeItem {
   used: boolean;
   usedAt?: any;
   usedByPhoneNumber?: string;
+  usedByName?: string;
+  usedByEmail?: string;
+  channel?: string;
   batchId?: string;
-  gameId?: string;
+  productId?: string;
   createdAt?: any;
 }
 
@@ -20,7 +23,7 @@ export interface CodesListResponse {
 }
 
 export interface GenerateCodesBody {
-  gameId?: string;
+  productId: string;
   quantity: number;
   batchId?: string;
 }

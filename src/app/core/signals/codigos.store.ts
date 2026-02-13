@@ -28,7 +28,7 @@ export class CodigosStore {
   readonly nextCursor = signal<string | null>(null);
 
   // geração
-  readonly formGameId = signal<string>('');
+  readonly formProductId = signal<string>('');
   readonly formBatchId = signal<string>('');
   readonly formQuantity = signal<number>(1);
   readonly generatedBatchId = signal<string | null>(null);
@@ -123,13 +123,18 @@ export class CodigosStore {
       this.error.set('Quantidade deve ser entre 1 e 1000.');
       return;
     }
+    const productId = this.formProductId().trim();
+    if (!productId) {
+      this.error.set('Selecione um produto.');
+      return;
+    }
     this.loadingGenerate.set(true);
     this.error.set(null);
     this.generatedCodes.set([]);
     this.generatedBatchId.set(null);
 
     const body = {
-      gameId: this.formGameId().trim() || undefined,
+      productId,
       batchId: this.formBatchId().trim() || undefined,
       quantity,
     };
