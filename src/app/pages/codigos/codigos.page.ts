@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -8,7 +8,9 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DropdownModule } from 'primeng/dropdown';
 import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
+import { GamesApiService, GameItem } from '../../services/games-api.service';
 
 @Component({
   selector: 'app-codigos-page',
@@ -23,6 +25,7 @@ import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
     TableModule,
     TagModule,
     SkeletonModule,
+    DropdownModule,
   ],
   template: `
     <div class="space-y-6">
@@ -83,13 +86,16 @@ import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
               <small class="text-xs text-surface-500">1 a 1000</small>
             </div>
             <div>
-              <label class="block text-sm font-medium text-surface-700 mb-1">Game ID (opcional)</label>
-              <input
-                pInputText
-                type="text"
-                [(ngModel)]="gameIdInput"
-                (ngModelChange)="store.formGameId.set(gameIdInput)"
-                class="w-full" />
+              <label class="block text-sm font-medium text-surface-700 mb-1">Game <span class="text-red-500">*</span></label>
+              <p-dropdown
+                [options]="gameOptions()"
+                [(ngModel)]="selectedGameId"
+                optionLabel="label"
+                optionValue="value"
+                (onChange)="onGameChange()"
+                placeholder="Selecione um jogo"
+                styleClass="w-full"
+                [loading]="loadingGames()" />
             </div>
             <div>
               <label class="block text-sm font-medium text-surface-700 mb-1">Batch ID (opcional)</label>
@@ -107,6 +113,7 @@ import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
               icon="pi pi-plus"
               (onClick)="store.gerarCodigos()"
               [loading]="store.loadingGenerate()"
+              [disabled]="!selectedGameId"
               styleClass="w-full md:w-auto" />
             @if (store.generatedBatchId(); as gb) {
               <span class="text-xs text-surface-600">Último lote gerado: <strong>{{ gb }}</strong></span>
@@ -227,11 +234,22 @@ import { CodigosStore, UsedFilter } from '../../core/signals/codigos.store';
 })
 export class CodigosPage implements OnInit {
   readonly store = inject(CodigosStore);
+  private readonly gamesApi = inject(GamesApiService);
+
+  readonly games = signal<GameItem[]>([]);
+  readonly loadingGames = signal(true);
+
+  readonly gameOptions = computed(() => {
+    return this.games().map((g) => ({
+      label: g.name || g.id,
+      value: g.productId || g.id,
+    }));
+  });
 
   batchIdInput = '';
   usedFilter: UsedFilter = 'all';
   quantityInput = 1;
-  gameIdInput = '';
+  selectedGameId = '';
   batchIdGenerateInput = '';
   searchCodeInput = '';
 
@@ -245,9 +263,28 @@ export class CodigosPage implements OnInit {
     this.store.usedFilter.set(this.usedFilter);
   }
 
+  onGameChange() {
+    this.store.formGameId.set(this.selectedGameId);
+  }
+
   ngOnInit() {
+    this.loadGames();
     // Carrega a primeira página automaticamente ao entrar na rota /codigos
     this.store.buscarPrimeiraPagina();
+  }
+
+  loadGames() {
+    this.loadingGames.set(true);
+    this.gamesApi.list({ limit: 100 }).subscribe({
+      next: (res) => {
+        this.games.set(res?.games ?? []);
+        this.loadingGames.set(false);
+      },
+      error: () => {
+        this.games.set([]);
+        this.loadingGames.set(false);
+      },
+    });
   }
 
   onBuscar() {

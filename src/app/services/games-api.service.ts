@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 
 export interface GameItem {
   id: string;
+  productId?: string;
   name: string;
   type: string;
   prompts?: Record<string, unknown>;
