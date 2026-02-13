@@ -32,17 +32,7 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
 
       <!-- Filtros -->
       <p-card class="shadow-sm">
-        <div class="flex flex-col md:flex-row gap-4">
-          <div class="flex-1">
-            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo (game type)</label>
-            <input
-              pInputText
-              type="text"
-              [(ngModel)]="typeFilterInput"
-              (ngModelChange)="store.typeFilter.set(typeFilterInput)"
-              placeholder="Ex: quiz, investigation..."
-              class="w-full" />
-          </div>
+        <div class="flex flex-col md:flex-row gap-4 items-end">
           <div class="flex flex-col gap-2">
             <label class="block text-sm font-medium text-surface-700 mb-1">Status</label>
             <p-selectButton
@@ -50,18 +40,11 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
               [(ngModel)]="activeFilter"
               optionLabel="label"
               optionValue="value"
-              (onChange)="store.activeFilter.set(activeFilter)" />
+              (onChange)="store.activeFilter.set(activeFilter); store.carregarPrimeiraPagina()" />
           </div>
-          <div class="flex flex-col justify-end gap-2">
-            <p-button
-              label="Buscar"
-              icon="pi pi-search"
-              (onClick)="store.carregarPrimeiraPagina()"
-              [disabled]="store.loadingList()" />
-            @if (store.error(); as err) {
-              <span class="text-xs text-red-600">{{ err }}</span>
-            }
-          </div>
+          @if (store.error(); as err) {
+            <span class="text-xs text-red-600">{{ err }}</span>
+          }
         </div>
       </p-card>
 
@@ -81,11 +64,11 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
               styleClass="p-datatable-sm"
               [scrollable]="true"
               scrollDirection="both"
-              [tableStyle]="{ 'min-width': '56rem' }">
+              [tableStyle]="{ 'min-width': '50rem' }">
               <ng-template pTemplate="header">
                 <tr>
                   <th>Nome</th>
-                  <th>Tipo</th>
+                  <th>Id do Produto</th>
                   <th>Ativo</th>
                   <th>Criado em</th>
                   <th style="width: 6rem">Ações</th>
@@ -94,7 +77,7 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
               <ng-template pTemplate="body" let-game>
                 <tr>
                   <td class="text-sm">{{ game.name }}</td>
-                  <td class="text-xs text-surface-600">{{ game.type }}</td>
+                  <td class="text-xs text-surface-600">{{ game.productId || '-' }}</td>
                   <td>
                     <p-tag
                       [value]="game.active ? 'Ativo' : 'Inativo'"
@@ -145,8 +128,8 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
             <input pInputText type="text" [(ngModel)]="formName" class="w-full" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-surface-700 mb-1">Tipo</label>
-            <input pInputText type="text" [(ngModel)]="formType" class="w-full" />
+            <label class="block text-sm font-medium text-surface-700 mb-1">ID do Produto</label>
+            <input pInputText type="text" [(ngModel)]="formProductId" class="w-full" placeholder="Ex: produto_123" />
           </div>
           <div class="flex items-center gap-2">
             <label class="text-sm font-medium text-surface-700">Ativo</label>
@@ -177,13 +160,12 @@ import { JogosStore, ActiveFilter } from '../../core/signals/jogos.store';
 export class JogosPage implements OnInit {
   readonly store = inject(JogosStore);
 
-  typeFilterInput = '';
   activeFilter: ActiveFilter = 'all';
 
   dialogVisible = false;
   selectedGameId: string | null = null;
   formName = '';
-  formType = '';
+  formProductId = '';
   formActive = true;
 
   readonly activeOptions = [
@@ -207,7 +189,7 @@ export class JogosPage implements OnInit {
   abrirNovo() {
     this.selectedGameId = null;
     this.formName = '';
-    this.formType = '';
+    this.formProductId = '';
     this.formActive = true;
     this.dialogVisible = true;
     this.store.error.set(null);
@@ -216,7 +198,7 @@ export class JogosPage implements OnInit {
   editar(game: any) {
     this.selectedGameId = game.id;
     this.formName = game.name;
-    this.formType = game.type;
+    this.formProductId = game.productId || '';
     this.formActive = !!game.active;
     this.dialogVisible = true;
     this.store.error.set(null);
@@ -231,7 +213,7 @@ export class JogosPage implements OnInit {
     this.store.salvar({
       id: this.selectedGameId || undefined,
       name: this.formName,
-      type: this.formType,
+      productId: this.formProductId,
       active: this.formActive,
     } as any);
   }
