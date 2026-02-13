@@ -15,6 +15,19 @@ import { UsuariosStore } from '../../core/signals/usuarios.store';
   selector: 'app-usuarios-page',
   standalone: true,
   imports: [CommonModule, FormsModule, CardModule, InputTextModule, InputMaskModule, ButtonModule, TableModule, TagModule, SkeletonModule, DialogModule],
+  styles: [`
+    :host ::ng-deep .sticky-action-col {
+      position: sticky !important;
+      left: 0;
+      z-index: 1;
+      background: inherit;
+      width: 4rem;
+      min-width: 4rem;
+      max-width: 4rem;
+      text-align: center;
+      box-shadow: 2px 0 4px -2px rgba(0, 0, 0, 0.1);
+    }
+  `],
   template: `
     <div class="space-y-6">
       <h1 class="text-xl sm:text-2xl font-bold text-surface-900">Usuários</h1>
@@ -67,27 +80,28 @@ import { UsuariosStore } from '../../core/signals/usuarios.store';
             [tableStyle]="{ 'min-width': '56rem' }">
             <ng-template pTemplate="header">
               <tr>
+                <th class="sticky-action-col">Ações</th>
                 <th>Nome</th>
                 <th>Email</th>
                 <th>Telefone</th>
                 <th>Criado em</th>
-                <th style="width: 5rem">Ações</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-c>
               <tr>
+                <td class="sticky-action-col">
+                  <p-button
+                    icon="pi pi-search"
+                    [text]="true"
+                    [rounded]="true"
+                    severity="primary"
+                    (onClick)="abrirModal(c)" />
+                </td>
                 <td class="text-sm">{{ c.name || '-' }}</td>
                 <td class="text-xs">{{ c.id || c.email || '-' }}</td>
                 <td class="text-xs">{{ formatPhone(c.phoneNumber) }}</td>
                 <td class="text-xs">
                   {{ toDate(c.createdAt) | date: 'short' }}
-                </td>
-                <td>
-                  <p-button
-                    icon="pi pi-search"
-                    [text]="true"
-                    [rounded]="true"
-                    (onClick)="abrirModal(c)" />
                 </td>
               </tr>
             </ng-template>
