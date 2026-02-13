@@ -2,6 +2,7 @@ import {
   Component,
   inject,
   OnInit,
+  OnDestroy,
   signal,
   computed,
   ChangeDetectionStrategy,
@@ -53,10 +54,10 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
   template: `
     <div class="space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 class="text-xl sm:text-2xl font-bold text-surface-900">Dashboard de Análise</h1>
+        <h1 class="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-0">Dashboard de Análise</h1>
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600">Selecione o Jogo</label>
+            <label class="text-sm text-surface-600 dark:text-surface-300">Selecione o Jogo</label>
             <p-dropdown
               [options]="gameOptions()"
               [(ngModel)]="selectedGameId"
@@ -68,7 +69,7 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
               [loading]="loadingGames()" />
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-sm text-surface-600">Período</label>
+            <label class="text-sm text-surface-600 dark:text-surface-300">Período</label>
             <p-dropdown
               [options]="periodOptions"
               [(ngModel)]="selectedPeriod"
@@ -93,27 +94,27 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
             </p-card>
           }
         } @else {
-          <p-card class="shadow-sm border border-surface-200">
+          <p-card class="shadow-sm border border-surface-200 dark:border-surface-700">
             <div class="flex flex-col gap-1">
-              <span class="text-surface-500 text-sm">Média de tempo para conclusão</span>
+              <span class="text-surface-500 dark:text-surface-400 text-sm">Média de tempo para conclusão</span>
               <span class="text-2xl font-bold text-blue-600">{{ analytics()?.tempoMedioTotalMin ?? 0 }} min</span>
             </div>
           </p-card>
-          <p-card class="shadow-sm border border-surface-200">
+          <p-card class="shadow-sm border border-surface-200 dark:border-surface-700">
             <div class="flex flex-col gap-1">
-              <span class="text-surface-500 text-sm">Ao longo de todas as fases</span>
+              <span class="text-surface-500 dark:text-surface-400 text-sm">Ao longo de todas as fases</span>
               <span class="text-2xl font-bold text-red-600">{{ analytics()?.totalInsultos ?? 0 }} insultos</span>
             </div>
           </p-card>
-          <p-card class="shadow-sm border border-surface-200">
+          <p-card class="shadow-sm border border-surface-200 dark:border-surface-700">
             <div class="flex flex-col gap-1">
-              <span class="text-surface-500 text-sm">Ao longo de todas as fases</span>
-              <span class="text-2xl font-bold text-surface-700">{{ analytics()?.totalDesistencia ?? 0 }} desistências</span>
+              <span class="text-surface-500 dark:text-surface-400 text-sm">Ao longo de todas as fases</span>
+              <span class="text-2xl font-bold text-surface-700 dark:text-surface-200">{{ analytics()?.totalDesistencia ?? 0 }} desistências</span>
             </div>
           </p-card>
-          <p-card class="shadow-sm border border-surface-200">
+          <p-card class="shadow-sm border border-surface-200 dark:border-surface-700">
             <div class="flex flex-col gap-1">
-              <span class="text-surface-500 text-sm">Por fase</span>
+              <span class="text-surface-500 dark:text-surface-400 text-sm">Por fase</span>
               <span class="text-2xl font-bold text-blue-600">{{ analytics()?.mediaMensagensPorFase ?? 0 }} msgs</span>
             </div>
           </p-card>
@@ -128,10 +129,10 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
             <p-skeleton width="100%" height="280px" />
           } @else if (barChartData()) {
             <div class="h-[280px]">
-              <p-chart type="bar" [data]="barChartData()!" [options]="barChartOptions" [responsive]="true" style="height: 100%;" />
+              <p-chart type="bar" [data]="barChartData()!" [options]="barChartOptions()" [responsive]="true" style="height: 100%;" />
             </div>
           } @else {
-            <p class="text-surface-500 py-8 text-center">Nenhum dado disponível.</p>
+            <p class="text-surface-500 dark:text-surface-400 py-8 text-center">Nenhum tempo registrado neste período.</p>
           }
         </p-card>
 
@@ -141,10 +142,10 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
             <p-skeleton width="100%" height="280px" />
           } @else if (insultosPieData()) {
             <div class="h-[280px]">
-              <p-chart type="pie" [data]="insultosPieData()!" [options]="pieChartOptions" [responsive]="true" style="height: 100%;" />
+              <p-chart type="pie" [data]="insultosPieData()!" [options]="pieChartOptions()" [responsive]="true" style="height: 100%;" />
             </div>
           } @else {
-            <p class="text-surface-500 py-8 text-center">Nenhum dado disponível.</p>
+            <p class="text-surface-500 dark:text-surface-400 py-8 text-center">Nenhum insulto registrado neste período.</p>
           }
         </p-card>
 
@@ -154,10 +155,10 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
             <p-skeleton width="100%" height="280px" />
           } @else if (desistenciaPieData()) {
             <div class="h-[280px]">
-              <p-chart type="pie" [data]="desistenciaPieData()!" [options]="pieChartOptions" [responsive]="true" style="height: 100%;" />
+              <p-chart type="pie" [data]="desistenciaPieData()!" [options]="pieChartOptions()" [responsive]="true" style="height: 100%;" />
             </div>
           } @else {
-            <p class="text-surface-500 py-8 text-center">Nenhum dado disponível.</p>
+            <p class="text-surface-500 dark:text-surface-400 py-8 text-center">Nenhuma desistência registrada neste período.</p>
           }
         </p-card>
 
@@ -167,17 +168,17 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
             <p-skeleton width="100%" height="280px" />
           } @else if (lineChartData()) {
             <div class="h-[280px]">
-              <p-chart type="line" [data]="lineChartData()!" [options]="lineChartOptions" [responsive]="true" style="height: 100%;" />
+              <p-chart type="line" [data]="lineChartData()!" [options]="lineChartOptions()" [responsive]="true" style="height: 100%;" />
             </div>
           } @else {
-            <p class="text-surface-500 py-8 text-center">Nenhum dado disponível.</p>
+            <p class="text-surface-500 dark:text-surface-400 py-8 text-center">Nenhuma mensagem registrada neste período.</p>
           }
         </p-card>
       </div>
 
       <!-- Análise por IA -->
       <section class="space-y-6">
-        <h2 class="text-lg font-semibold text-surface-900">Análise por IA</h2>
+        <h2 class="text-lg font-semibold text-surface-900 dark:text-surface-0">Análise por IA</h2>
         @if (loading()) {
           <p-skeleton width="100%" height="200px" />
         } @else {
@@ -186,7 +187,7 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
               <div class="flex flex-col gap-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   @if (phase.generatedAtFormatted()) {
-                    <span class="text-sm text-surface-500">Última análise em {{ phase.generatedAtFormatted() }}</span>
+                    <span class="text-sm text-surface-500 dark:text-surface-400">Última análise em {{ phase.generatedAtFormatted() }}</span>
                   }
                   <p-button
                     label="Gerar nova análise"
@@ -196,18 +197,18 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
                     (onClick)="savePhaseWords(phase)" />
                 </div>
                 @if (phase.analysisText) {
-                  <p class="text-surface-700 whitespace-pre-wrap">{{ phase.analysisText }}</p>
+                  <p class="text-surface-700 dark:text-surface-200 whitespace-pre-wrap">{{ phase.analysisText }}</p>
                 } @else {
-                  <p class="text-surface-500 italic">Nenhuma análise gerada ainda. Use o botão acima para salvar as palavras mais usadas e, em seguida, preencha a análise (via API ou integração).</p>
+                  <p class="text-surface-500 dark:text-surface-400 italic">Nenhuma análise gerada ainda. Use o botão acima para salvar as palavras mais usadas e, em seguida, preencha a análise (via API ou integração).</p>
                 }
                 <div>
-                  <h3 class="text-sm font-medium text-surface-700 mb-2">Palavras mais usadas</h3>
+                  <h3 class="text-sm font-medium text-surface-700 dark:text-surface-200 mb-2">Palavras mais usadas</h3>
                   <div class="flex flex-wrap gap-2">
                     @for (w of phase.topWords; track w.word) {
-                      <span class="inline-flex items-center rounded-md bg-surface-100 px-2 py-0.5 text-sm text-surface-800">{{ w.word }} {{ w.count }}</span>
+                      <span class="inline-flex items-center rounded-md bg-surface-100 dark:bg-surface-700 px-2 py-0.5 text-sm text-surface-800 dark:text-surface-200">{{ w.word }} {{ w.count }}</span>
                     }
                     @if (phase.topWords.length === 0) {
-                      <span class="text-surface-500 text-sm">Nenhuma palavra no período.</span>
+                      <span class="text-surface-500 dark:text-surface-400 text-sm">Nenhuma palavra no período.</span>
                     }
                   </div>
                 </div>
@@ -216,7 +217,7 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
           }
           @if (phasesWithAnalysis().length === 0 && !loading()) {
             <p-card class="shadow-sm">
-              <p class="text-surface-500 py-4 text-center">Selecione um jogo e período para ver análises por fase.</p>
+              <p class="text-surface-500 dark:text-surface-400 py-4 text-center">Selecione um jogo e período para ver análises por fase.</p>
             </p-card>
           }
         }
@@ -224,7 +225,7 @@ function formatAnalysisDate(value: string | number | { toMillis?: () => number }
     </div>
   `,
 })
-export class DashboardPage implements OnInit {
+export class DashboardPage implements OnInit, OnDestroy {
   private readonly analyticsApi = inject(AnalyticsApiService);
   private readonly gamesApi = inject(GamesApiService);
 
@@ -241,6 +242,8 @@ export class DashboardPage implements OnInit {
   readonly phaseAnalyses = signal<PhaseAnalysisItem[]>([]);
   readonly games = signal<GameItem[]>([]);
   readonly savingPhaseId = signal<string | null>(null);
+  readonly isDark = signal(false);
+  private themeObserver: MutationObserver | null = null;
 
   selectedPeriod: AnalyticsPeriod = '7d';
   selectedGameId = '';
@@ -259,21 +262,29 @@ export class DashboardPage implements OnInit {
     const a = this.analytics();
     const phases = a?.porFase ?? [];
     if (phases.length === 0) return null;
-    const labels = phases.map((p) => p.phaseName);
     const data = phases.map((p) => p.tempoMedioMin ?? 0);
+    const totalSum = data.reduce((sum, val) => sum + val, 0);
+    if (totalSum === 0) return null;
+    const labels = phases.map((p) => p.phaseName);
     return {
       labels,
       datasets: [{ label: 'Tempo Médio (min)', data, backgroundColor: '#3b82f6', borderColor: '#2563eb' }],
     };
   });
 
+  private readonly pieColors = [
+    '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4',
+  ];
+
   readonly insultosPieData = computed(() => {
     const a = this.analytics();
     const phases = a?.porFase ?? [];
     if (phases.length === 0) return null;
+    const totalSum = phases.reduce((sum, p) => sum + (p.totalInsultos ?? 0), 0);
+    if (totalSum === 0) return null;
     return {
       labels: phases.map((p) => p.phaseName),
-      datasets: [{ data: phases.map((p) => p.totalInsultos), backgroundColor: ['#ef4444', '#f97316', '#eab308'] }],
+      datasets: [{ data: phases.map((p) => p.totalInsultos), backgroundColor: this.pieColors.slice(0, phases.length) }],
     };
   });
 
@@ -281,9 +292,11 @@ export class DashboardPage implements OnInit {
     const a = this.analytics();
     const phases = a?.porFase ?? [];
     if (phases.length === 0) return null;
+    const totalSum = phases.reduce((sum, p) => sum + (p.totalDesistencia ?? 0), 0);
+    if (totalSum === 0) return null;
     return {
       labels: phases.map((p) => p.phaseName),
-      datasets: [{ data: phases.map((p) => p.totalDesistencia), backgroundColor: ['#f97316', '#ef4444', '#78716c'] }],
+      datasets: [{ data: phases.map((p) => p.totalDesistencia), backgroundColor: this.pieColors.slice(0, phases.length) }],
     };
   });
 
@@ -291,6 +304,8 @@ export class DashboardPage implements OnInit {
     const a = this.analytics();
     const phases = a?.porFase ?? [];
     if (phases.length === 0) return null;
+    const totalSum = phases.reduce((sum, p) => sum + (p.totalMensagens ?? 0), 0);
+    if (totalSum === 0) return null;
     return {
       labels: phases.map((p) => p.phaseName),
       datasets: [
@@ -328,35 +343,95 @@ export class DashboardPage implements OnInit {
     });
   });
 
-  barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'top' as const } },
-    scales: {
-      y: { beginAtZero: true, title: { display: true, text: 'Minutos' } },
-      x: { title: { display: true, text: 'Fases' } },
-    },
-  };
+  readonly barChartOptions = computed(() => {
+    const textColor = this.isDark() ? '#e5e7eb' : '#374151';
+    const gridColor = this.isDark() ? '#374151' : '#e5e7eb';
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+          labels: { color: textColor },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Minutos', color: textColor },
+          ticks: { color: textColor },
+          grid: { color: gridColor },
+        },
+        x: {
+          title: { display: true, text: 'Fases', color: textColor },
+          ticks: { color: textColor },
+          grid: { color: gridColor },
+        },
+      },
+    };
+  });
 
-  pieChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom' as const } },
-  };
+  readonly pieChartOptions = computed(() => {
+    const textColor = this.isDark() ? '#e5e7eb' : '#374151';
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom' as const,
+          labels: { color: textColor },
+        },
+      },
+    };
+  });
 
-  lineChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { position: 'top' as const } },
-    scales: {
-      y: { beginAtZero: true, title: { display: true, text: 'Número de Mensagens' } },
-      x: { title: { display: true, text: 'Fases' } },
-    },
-  };
+  readonly lineChartOptions = computed(() => {
+    const textColor = this.isDark() ? '#e5e7eb' : '#374151';
+    const gridColor = this.isDark() ? '#374151' : '#e5e7eb';
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+          labels: { color: textColor },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Número de Mensagens', color: textColor },
+          ticks: { color: textColor },
+          grid: { color: gridColor },
+        },
+        x: {
+          title: { display: true, text: 'Fases', color: textColor },
+          ticks: { color: textColor },
+          grid: { color: gridColor },
+        },
+      },
+    };
+  });
 
   ngOnInit(): void {
+    this.initThemeObserver();
     this.loadGames();
     this.loadAnalytics();
+  }
+
+  ngOnDestroy(): void {
+    this.themeObserver?.disconnect();
+  }
+
+  private initThemeObserver(): void {
+    this.isDark.set(document.documentElement.classList.contains('dark'));
+    this.themeObserver = new MutationObserver(() => {
+      this.isDark.set(document.documentElement.classList.contains('dark'));
+    });
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
   }
 
   loadGames(): void {

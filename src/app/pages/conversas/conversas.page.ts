@@ -26,13 +26,13 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
   ],
   template: `
     <div class="space-y-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-surface-900">Conversas</h1>
+      <h1 class="text-xl sm:text-2xl font-bold text-surface-900 dark:text-surface-0">Conversas</h1>
 
       <!-- Filtros -->
       <p-card class="shadow-sm mb-16">
         <div class="flex flex-col md:flex-row gap-4 items-start md:items-end">
           <div class="flex-1 w-full">
-            <label class="block text-sm font-medium text-surface-700 mb-1">Telefone</label>
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1">Telefone</label>
             <p-inputMask
               [(ngModel)]="phoneInput"
               mask="99 (99) 99999-9999"
@@ -43,7 +43,7 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
               (keydown.enter)="onBuscar()" />
           </div>
           <div class="w-full md:w-52">
-            <label class="block text-sm font-medium text-surface-700 mb-1">Status</label>
+            <label class="block text-sm font-medium text-surface-700 dark:text-surface-200 mb-1">Status</label>
             <p-dropdown
               [options]="statusOptions"
               [(ngModel)]="status"
@@ -95,18 +95,18 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
             } @else if (store.conversations().length === 0) {
               <p class="text-sm text-surface-500 m-0">Nenhuma conversa encontrada.</p>
             } @else {
-              <ul class="divide-y divide-surface-200 -mx-3">
+              <ul class="divide-y divide-surface-200 dark:divide-surface-700 -mx-3">
                 @for (c of store.conversations(); track c.id) {
                   <li>
                     <button
                       type="button"
-                      class="w-full text-left px-3 py-3 flex flex-col gap-1 hover:bg-surface-50"
+                      class="w-full text-left px-3 py-3 flex flex-col gap-1 hover:bg-surface-50 dark:hover:bg-surface-700"
                       [ngClass]="{
-                        'bg-primary-50 border-l-2 border-primary-500': store.selectedConversation()?.id === c.id
+                        'bg-primary-50 dark:bg-primary-900/30 border-l-2 border-primary-500': store.selectedConversation()?.id === c.id
                       }"
                       (click)="store.selecionarConversa(c.id)">
                       <div class="flex items-center justify-between gap-2">
-                        <span class="font-medium text-sm text-surface-900 truncate">
+                        <span class="font-medium text-sm text-surface-900 dark:text-surface-0 truncate">
                           {{ c.contactName || c.phoneNumber }}
                         </span>
                         <p-tag
@@ -115,10 +115,10 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
                           styleClass="text-xs" />
                       </div>
                       @if (c.contactName) {
-                        <div class="text-xs text-surface-500">({{ c.phoneNumber }})</div>
+                        <div class="text-xs text-surface-500 dark:text-surface-300">({{ c.phoneNumber }})</div>
                       }
                       @if (c.lastMessagePreview) {
-                        <p class="text-xs text-surface-600 truncate m-0">{{ c.lastMessagePreview }}</p>
+                        <p class="text-xs text-surface-600 dark:text-surface-300 truncate m-0">{{ c.lastMessagePreview }}</p>
                       }
                       @if (c.tags?.length) {
                         <div class="flex flex-wrap gap-1 mt-0.5">
@@ -127,7 +127,7 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
                           }
                         </div>
                       }
-                      <div class="text-xs text-surface-500 mt-0.5">
+                      <div class="text-xs text-surface-500 dark:text-surface-400 mt-0.5">
                         {{ c.lastMessageAtDate ?? c.lastMessageAt | date: 'short' }}
                       </div>
                     </button>
@@ -154,11 +154,11 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
             <ng-template pTemplate="header">
               <div class="flex items-center justify-between gap-2 p-4">
                 <div>
-                  <p class="text-sm font-semibold text-surface-900 m-0">
+                  <p class="text-sm font-semibold text-surface-900 dark:text-surface-0 m-0">
                     {{ store.selectedConversation()?.contactName || store.selectedConversation()?.phoneNumber || 'Nenhuma conversa selecionada' }}
                   </p>
                   @if (store.selectedConversation(); as conv) {
-                    <p class="text-xs text-surface-500 m-0">
+                    <p class="text-xs text-surface-500 dark:text-surface-400 m-0">
                       Status:
                       {{ conv.status === 'active' ? 'Ativa' : 'Encerrada' }}
                     </p>
@@ -178,25 +178,25 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
             <div class="flex flex-col lg:flex-row gap-4 h-full">
               <!-- Mensagens da conversa -->
               <div class="flex-1 flex flex-col min-h-[220px] max-h-[460px]">
-                <h2 class="text-sm font-semibold text-surface-700 mb-2">Mensagens recentes</h2>
+                <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-2">Mensagens recentes</h2>
                 @if (store.loadingMessages()) {
                   <p-skeleton width="100%" height="200px" />
                 } @else if (!store.selectedConversation()) {
-                  <p class="text-sm text-surface-500">Selecione uma conversa para ver as mensagens.</p>
+                  <p class="text-sm text-surface-500 dark:text-surface-400">Selecione uma conversa para ver as mensagens.</p>
                 } @else if (store.messages().length === 0) {
-                  <p class="text-sm text-surface-500">Nenhuma mensagem encontrada para esta conversa.</p>
+                  <p class="text-sm text-surface-500 dark:text-surface-400">Nenhuma mensagem encontrada para esta conversa.</p>
                 } @else {
                   <div class="flex-1 overflow-auto space-y-3 pr-1">
                     @for (m of store.messages(); track m.id) {
-                      <div class="flex flex-col gap-1 border border-surface-200 rounded-md p-2">
-                        <p class="text-xs text-surface-500 m-0">
+                      <div class="flex flex-col gap-1 border border-surface-200 dark:border-surface-600 rounded-md p-2">
+                        <p class="text-xs text-surface-500 dark:text-surface-400 m-0">
                           {{ m.createdAtDate ?? m.createdAt | date: 'short' }} • {{ m.source }}
                         </p>
-                        <p class="text-xs text-surface-600 m-0">
+                        <p class="text-xs text-surface-600 dark:text-surface-300 m-0">
                           <span class="font-semibold">Cliente:</span>
                           {{ m.question }}
                         </p>
-                        <p class="text-sm text-surface-900 m-0 whitespace-pre-line">
+                        <p class="text-sm text-surface-900 dark:text-surface-0 m-0 whitespace-pre-line">
                           {{ m.response.text }}
                         </p>
                       </div>
@@ -207,24 +207,24 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
 
               <!-- Respostas do agente (por telefone) -->
               <div class="w-full lg:w-64 flex flex-col min-h-[220px] max-h-[460px]">
-                <h2 class="text-sm font-semibold text-surface-700 mb-2">Histórico do agente</h2>
+                <h2 class="text-sm font-semibold text-surface-700 dark:text-surface-200 mb-2">Histórico do agente</h2>
                 @if (store.loadingResponses()) {
                   <p-skeleton width="100%" height="200px" />
                 } @else if (store.responses().length === 0) {
-                  <p class="text-sm text-surface-500">
+                  <p class="text-sm text-surface-500 dark:text-surface-400">
                     Carregue as respostas do agente para este telefone.
                   </p>
                 } @else {
                   <div class="flex-1 overflow-auto space-y-3 pr-1">
                     @for (r of store.responses(); track r.id) {
-                      <div class="border border-surface-200 rounded-md p-2">
-                        <p class="text-xs text-surface-500 m-0">
+                      <div class="border border-surface-200 dark:border-surface-600 rounded-md p-2">
+                        <p class="text-xs text-surface-500 dark:text-surface-400 m-0">
                           {{ r.createdAtDate ?? r.createdAt | date: 'short' }}
                         </p>
-                        <p class="text-xs text-surface-600 m-0">
+                        <p class="text-xs text-surface-600 dark:text-surface-300 m-0">
                           <span class="font-semibold">Pergunta:</span> {{ r.question }}
                         </p>
-                        <p class="text-xs text-surface-900 m-0 whitespace-pre-line">
+                        <p class="text-xs text-surface-900 dark:text-surface-0 m-0 whitespace-pre-line">
                           <span class="font-semibold">Resposta:</span> {{ r.response.text }}
                         </p>
                       </div>
