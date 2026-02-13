@@ -150,12 +150,12 @@ import { UsuariosStore } from '../../core/signals/usuarios.store';
               </div>
               <div>
                 <p class="text-sm font-medium text-surface-700 mb-1">Jogos</p>
-                @if ((detail.games?.length ?? 0) === 0) {
+                @if ((store.userGamesWithNames()?.length ?? 0) === 0) {
                   <p class="text-sm text-surface-500 m-0">Nenhum jogo associado.</p>
                 } @else {
                   <ul class="text-sm text-surface-700 list-disc list-inside m-0">
-                    @for (g of detail.games; track g) {
-                      <li>{{ g }}</li>
+                    @for (g of store.userGamesWithNames(); track g.code) {
+                      <li>{{ g.name }}</li>
                     }
                   </ul>
                 }
@@ -189,6 +189,9 @@ import { UsuariosStore } from '../../core/signals/usuarios.store';
                   styleClass="w-full" />
                 @if (store.changePhoneError(); as err) {
                   <p class="text-xs text-red-600 mt-2 m-0">{{ err }}</p>
+                }
+                @if (store.changePhoneSuccess(); as msg) {
+                  <p class="text-xs text-green-600 mt-2 m-0">{{ msg }}</p>
                 }
               </div>
             </div>
@@ -239,10 +242,16 @@ export class UsuariosPage {
   }
 
   abrirModal(c: { phoneNumber?: string; id?: string }) {
-    if (!c.phoneNumber) return;
+    console.log('[DEBUG] abrirModal chamado com:', c);
+    console.log('[DEBUG] c.phoneNumber:', c.phoneNumber, '| tipo:', typeof c.phoneNumber);
+    if (!c.phoneNumber) {
+      console.log('[DEBUG] phoneNumber vazio/undefined no abrirModal, retornando...');
+      return;
+    }
     this.changeEmailInput = c.id || '';
     this.changePhoneInput = '';
-    this.store.changePhoneError.set(null);
+    this.store.limparMensagens();
+    console.log('[DEBUG] Abrindo modal e chamando selecionarCliente');
     this.modalVisible.set(true);
     this.store.selecionarCliente(c as any);
   }
