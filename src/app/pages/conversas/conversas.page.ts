@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
+import { InputMaskModule } from 'primeng/inputmask';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -17,6 +18,7 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
     FormsModule,
     CardModule,
     InputTextModule,
+    InputMaskModule,
     DropdownModule,
     ButtonModule,
     SkeletonModule,
@@ -31,13 +33,14 @@ import { ConversasStore, StatusFilter } from '../../core/signals/conversas.store
         <div class="flex flex-col md:flex-row gap-4 items-start md:items-end">
           <div class="flex-1 w-full">
             <label class="block text-sm font-medium text-surface-700 mb-1">Telefone</label>
-            <input
-              pInputText
-              type="tel"
+            <p-inputMask
               [(ngModel)]="phoneInput"
-              placeholder="Ex: 5599999999999"
-              class="w-full"
-              (keyup.enter)="onBuscar()" />
+              mask="99 (99) 99999-9999"
+              placeholder="55 (99) 99999-9999"
+              slotChar=" "
+              [unmask]="true"
+              styleClass="w-full"
+              (keydown.enter)="onBuscar()" />
           </div>
           <div class="w-full md:w-52">
             <label class="block text-sm font-medium text-surface-700 mb-1">Status</label>
