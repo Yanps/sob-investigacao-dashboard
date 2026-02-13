@@ -15,9 +15,14 @@ export interface AgentMessageView extends AgentResponseDto {
 
 function toDate(value: any): Date | null {
   if (!value) return null;
-  // Firestore Timestamp-like
-  if (typeof value === 'object' && 'seconds' in value) {
-    return new Date((value.seconds as number) * 1000);
+  // Firestore Timestamp-like (pode vir como 'seconds' ou '_seconds')
+  if (typeof value === 'object') {
+    if ('_seconds' in value) {
+      return new Date((value._seconds as number) * 1000);
+    }
+    if ('seconds' in value) {
+      return new Date((value.seconds as number) * 1000);
+    }
   }
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d;
