@@ -1,7 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { catchError, finalize, of } from 'rxjs';
 import { GameItem, GamesApiService } from '../../services/games-api.service';
-import { MOCK_GAMES_LIST } from '../mocks/page-mocks';
 
 export type ActiveFilter = 'all' | 'active' | 'inactive';
 
@@ -9,7 +8,6 @@ export type ActiveFilter = 'all' | 'active' | 'inactive';
 export class JogosStore {
   private readonly api = inject(GamesApiService);
 
-  readonly typeFilter = signal<string>('');
   readonly activeFilter = signal<ActiveFilter>('all');
 
   private readonly gamesSignal = signal<GameItem[]>([]);
@@ -20,29 +18,29 @@ export class JogosStore {
   readonly loadingMore = signal(false);
   readonly loadingSave = signal(false);
   readonly error = signal<string | null>(null);
+  readonly saveSuccess = signal(false);
 
   readonly selectedGame = signal<GameItem | null>(null);
 
   readonly hasMore = computed(() => !!this.nextCursor());
 
-  private mapFilters(): { active?: boolean; type?: string } {
-    const type = this.typeFilter().trim() || undefined;
+  private mapFilters(): { active?: boolean } {
     const activeFilter = this.activeFilter();
     let active: boolean | undefined;
     if (activeFilter === 'active') active = true;
     if (activeFilter === 'inactive') active = false;
-    return { active, type };
+    return { active };
   }
 
   carregarPrimeiraPagina(limit: number = 20) {
-    const { active, type } = this.mapFilters();
+    const { active } = this.mapFilters();
     this.loadingList.set(true);
     this.error.set(null);
     this.gamesSignal.set([]);
     this.nextCursor.set(null);
 
     this.api
-      .list({ active, type, limit })
+      .list({ active, limit })
       .pipe(
         catchError((_err) => {
           this.error.set('Não foi possível carregar os jogos.');
@@ -51,8 +49,7 @@ export class JogosStore {
         finalize(() => this.loadingList.set(false)),
       )
       .subscribe((res) => {
-        const list = res.games ?? [];
-        this.gamesSignal.set(list.length > 0 ? list : MOCK_GAMES_LIST);
+        this.gamesSignal.set(res.games ?? []);
         this.nextCursor.set(res.nextCursor ?? null);
       });
   }
@@ -60,12 +57,12 @@ export class JogosStore {
   carregarMais(limit: number = 20) {
     const cursor = this.nextCursor();
     if (!cursor) return;
-    const { active, type } = this.mapFilters();
+    const { active } = this.mapFilters();
     this.loadingMore.set(true);
     this.error.set(null);
 
     this.api
-      .list({ active, type, limit, startAfter: cursor })
+      .list({ active, limit, startAfter: cursor })
       .pipe(
         catchError((_err) => {
           this.error.set('Não foi possível carregar mais jogos.');
@@ -87,22 +84,24 @@ export class JogosStore {
   salvar(game: Partial<GameItem>) {
     const payload = {
       name: game.name?.trim() ?? '',
-      type: game.type?.trim() ?? '',
+      type: 'default',
+      productId: game.productId?.trim() || undefined,
       prompts: game.prompts ?? {},
       config: game.config ?? {},
       active: game.active,
     };
-    if (!payload.name || !payload.type) {
-      this.error.set('Nome e tipo são obrigatórios.');
+    if (!payload.name) {
+      this.error.set('Nome é obrigatório.');
       return;
     }
     this.loadingSave.set(true);
     this.error.set(null);
+    this.saveSuccess.set(false);
 
     const existingId = (game as GameItem).id;
     const request$ = existingId
       ? this.api.update(existingId, payload)
-      : this.api.create({ name: payload.name, type: payload.type, prompts: payload.prompts, config: payload.config });
+      : this.api.create({ name: payload.name, type: payload.type, productId: payload.productId, prompts: payload.prompts, config: payload.config });
 
     request$
       .pipe(
@@ -121,6 +120,7 @@ export class JogosStore {
           this.gamesSignal.set([saved, ...list]);
         }
         this.selectedGame.set(saved);
+        this.saveSuccess.set(true);
       });
   }
 }

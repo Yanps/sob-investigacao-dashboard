@@ -7,8 +7,8 @@ export interface Customer {
   id: string;
   name?: string;
   email?: string;
-  phoneNumber?: string;
-  phoneNumberAlt?: string;
+  phoneNumber?: string | number;
+  phoneNumberAlt?: string | number;
   createdAt?: any;
 }
 
@@ -42,12 +42,17 @@ export class UsersApiService {
     return this.http.get<UsersListResponse>(`${this.base}/users`, { params: query });
   }
 
-  getByPhone(phoneNumber: string): Observable<UserDetailResponse> {
-    return this.http.get<UserDetailResponse>(`${this.base}/users/${encodeURIComponent(phoneNumber.trim())}`);
+  getByPhone(phoneNumber: string | number): Observable<UserDetailResponse> {
+    const phoneStr = String(phoneNumber).trim();
+    const url = `${this.base}/users/${encodeURIComponent(phoneStr)}`;
+    console.log('[DEBUG] UsersApiService.getByPhone - URL:', url);
+    console.log('[DEBUG] UsersApiService.getByPhone - phoneNumber original:', phoneNumber);
+    return this.http.get<UserDetailResponse>(url);
   }
 
-  listGames(phoneNumber: string): Observable<string[]> {
-    return this.http.get<string[]>(`${this.base}/users/${encodeURIComponent(phoneNumber.trim())}/games`);
+  listGames(phoneNumber: string | number): Observable<string[]> {
+    const phoneStr = String(phoneNumber).trim();
+    return this.http.get<string[]>(`${this.base}/users/${encodeURIComponent(phoneStr)}/games`);
   }
 
   changePhone(body: ChangePhoneBody): Observable<{ success: boolean; message: string }> {

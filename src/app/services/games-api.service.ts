@@ -22,6 +22,7 @@ export interface GamesListResponse {
 export interface CreateGameBody {
   name: string;
   type: string;
+  productId?: string;
   prompts?: Record<string, unknown>;
   config?: Record<string, unknown>;
 }
@@ -29,6 +30,7 @@ export interface CreateGameBody {
 export interface UpdateGameBody {
   name?: string;
   type?: string;
+  productId?: string;
   prompts?: Record<string, unknown>;
   config?: Record<string, unknown>;
   active?: boolean;

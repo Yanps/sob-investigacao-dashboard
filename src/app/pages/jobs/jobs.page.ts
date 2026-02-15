@@ -68,7 +68,7 @@ import { MOCK_JOBS_STATS, MOCK_JOBS_LIST } from '../../core/mocks/page-mocks';
               <tr>
                 <td class="font-mono text-xs">{{ job.id }}</td>
                 <td><span [class]="badgeClass(job.status)">{{ job.status }}</span></td>
-                <td>{{ job.phoneNumber }}</td>
+                <td>{{ formatPhone(job.phoneNumber) }}</td>
                 <td>{{ formatJobDate(job.createdAt) }}</td>
               </tr>
             </ng-template>
@@ -159,5 +159,20 @@ export class JobsPage implements OnInit {
       if (typeof v === 'number') return this.formatJobDate(v);
     }
     return '-';
+  }
+
+  formatPhone(phone: unknown): string {
+    if (!phone) return '-';
+    const str = String(phone);
+    const digits = str.replace(/\D/g, '');
+    if (digits.length === 13) {
+      // 55 21 99999 9999 -> 55 (21) 99999-9999
+      return `${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+    }
+    if (digits.length === 11) {
+      // 21 99999 9999 -> (21) 99999-9999
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+    }
+    return str;
   }
 }
