@@ -159,12 +159,12 @@ import { UsuariosStore } from '../../core/signals/usuarios.store';
                   <span class="font-medium">Telefone alternativo:</span> {{ formatPhone(detail.customer?.phoneNumberAlt) }}
                 </p>
                 <p class="m-0">
-                  <span class="font-medium">Pedidos:</span> {{ detail.ordersCount ?? 0 }}
+                  <span class="font-medium">Pedidos:</span> {{ detail.ordersCount }}
                 </p>
               </div>
               <div>
                 <p class="text-sm font-medium text-surface-700 mb-1">Jogos</p>
-                @if ((store.userGamesWithNames()?.length ?? 0) === 0) {
+                @if (store.userGamesWithNames().length === 0) {
                   <p class="text-sm text-surface-500 m-0">Nenhum jogo associado.</p>
                 } @else {
                   <ul class="text-sm text-surface-700 list-disc list-inside m-0">
