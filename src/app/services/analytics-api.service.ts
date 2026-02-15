@@ -44,10 +44,34 @@ export interface PhaseAnalysisSaveBody {
   topWords?: Array<{ word: string; count: number }>;
 }
 
+/** Resposta do GET /api/dashboard/summary (métricas a partir de agent_responses). */
+export interface DashboardSummaryResponse {
+  gameType: string | null;
+  averageTimes: { labels: string[]; data: number[]; avgTotalTime: number };
+  swearWords: { labels: string[]; data: number[]; totalSwearWords: number };
+  giveupWords: { labels: string[]; data: number[]; totalGiveupWords: number };
+  phaseMessages: { labels: string[]; data: number[] };
+  aiAnalysis: Array<{
+    phaseId: string;
+    phase: string;
+    analysis: string;
+    createdAt?: string;
+    topWords: Array<{ word: string; count: number }>;
+  }>;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/api`;
+
+  /** Dashboard completo a partir de agent_responses (summary). */
+  getDashboardSummary(period?: AnalyticsPeriod, gameType?: string): Observable<DashboardSummaryResponse> {
+    const params: Record<string, string> = {};
+    if (period) params['period'] = period;
+    if (gameType?.trim()) params['gameType'] = gameType.trim();
+    return this.http.get<DashboardSummaryResponse>(`${this.base}/dashboard/summary`, { params });
+  }
 
   getDashboardAnalytics(period?: AnalyticsPeriod, gameId?: string): Observable<DashboardAnalyticsResponse> {
     const params: Record<string, string> = {};

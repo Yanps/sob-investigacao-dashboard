@@ -15,7 +15,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageModule } from 'primeng/message';
-import { AnalyticsApiService, type AnalyticsPeriod, type PhaseMetric, type PhaseAnalysisItem } from '../../services/analytics-api.service';
+import { AnalyticsApiService, type AnalyticsPeriod, type PhaseMetric, type PhaseAnalysisItem, type DashboardSummaryResponse } from '../../services/analytics-api.service';
 import { GamesApiService } from '../../services/games-api.service';
 import type { GameItem } from '../../services/games-api.service';
 
@@ -451,26 +451,62 @@ export class DashboardPage implements OnInit, OnDestroy {
   loadAnalytics(): void {
     this.loading.set(true);
     this.error.set(null);
-    const gameId = this.selectedGameId?.trim() || undefined;
-    this.analyticsApi.getDashboardAnalytics(this.selectedPeriod, gameId).subscribe({
-      next: (res) => {
+    const gameType = this.selectedGameId?.trim() || undefined;
+    this.analyticsApi.getDashboardSummary(this.selectedPeriod, gameType).subscribe({
+      next: (res: DashboardSummaryResponse) => {
+        const porFase = this.mapSummaryToPorFase(res);
+        const mediaMensagensPorFase =
+          porFase.length > 0
+            ? porFase.reduce((s, p) => s + (p.totalMensagens ?? 0), 0) / porFase.length
+            : 0;
         this.analytics.set({
-          tempoMedioTotalMin: res.tempoMedioTotalMin ?? 0,
-          totalInsultos: res.totalInsultos ?? 0,
-          totalDesistencia: res.totalDesistencia ?? 0,
-          mediaMensagensPorFase: res.mediaMensagensPorFase ?? 0,
-          porFase: res.porFase ?? [],
+          tempoMedioTotalMin: res.averageTimes?.avgTotalTime ?? 0,
+          totalInsultos: res.swearWords?.totalSwearWords ?? 0,
+          totalDesistencia: res.giveupWords?.totalGiveupWords ?? 0,
+          mediaMensagensPorFase: Math.round(mediaMensagensPorFase * 10) / 10,
+          porFase,
         });
+        this.phaseAnalyses.set(this.mapSummaryToPhaseAnalyses(res));
         this.loading.set(false);
-        if (gameId) this.loadPhaseAnalyses(gameId);
-        else this.phaseAnalyses.set([]);
       },
       error: (err) => {
         this.error.set(err?.error?.message ?? err?.message ?? 'Erro ao carregar analytics.');
         this.analytics.set(null);
+        this.phaseAnalyses.set([]);
         this.loading.set(false);
       },
     });
+  }
+
+  private mapSummaryToPorFase(res: DashboardSummaryResponse): PhaseMetric[] {
+    const labels = res.averageTimes?.labels ?? [];
+    if (labels.length === 0) return [];
+    const avg = res.averageTimes?.data ?? [];
+    const insultos = res.swearWords?.data ?? [];
+    const desistencia = res.giveupWords?.data ?? [];
+    const mensagens = res.phaseMessages?.data ?? [];
+    return labels.map((phaseName, i) => ({
+      phaseId: `fase${i + 1}`,
+      phaseName,
+      totalInsultos: insultos[i] ?? 0,
+      totalDesistencia: desistencia[i] ?? 0,
+      totalMensagens: mensagens[i] ?? 0,
+      tempoMedioMin: avg[i],
+      topWords: [] as Array<{ word: string; count: number }>,
+    }));
+  }
+
+  private mapSummaryToPhaseAnalyses(res: DashboardSummaryResponse): PhaseAnalysisItem[] {
+    const items = res.aiAnalysis ?? [];
+    return items.map((a) => ({
+      id: a.phaseId,
+      gameId: res.gameType ?? '',
+      phaseId: a.phaseId,
+      phaseName: a.phase,
+      analysisText: a.analysis,
+      topWords: a.topWords ?? [],
+      generatedAt: a.createdAt,
+    }));
   }
 
   loadPhaseAnalyses(gameId: string): void {
