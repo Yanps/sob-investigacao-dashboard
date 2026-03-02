@@ -93,16 +93,37 @@ import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.s
               <div class="mt-4">
                 <div class="flex items-center justify-between mb-2">
                   <h3 class="text-sm font-semibold text-surface-800 dark:text-surface-200">Códigos gerados ({{ store.generatedCodes().length }})</h3>
-                  <p-button
-                    icon="pi pi-copy"
-                    label="Copiar todos"
-                    severity="secondary"
-                    size="small"
-                    (onClick)="copiarCodigosGerados()" />
+                  <div class="flex gap-2">
+                    <p-button
+                      icon="pi pi-copy"
+                      label="Copiar todos"
+                      severity="secondary"
+                      size="small"
+                      (onClick)="copiarCodigosGerados()" />
+                    @if (store.generatedBatchId()) {
+                      <p-button
+                        icon="pi pi-file-pdf"
+                        label="Baixar PDFs"
+                        severity="secondary"
+                        size="small"
+                        [loading]="loadingDownload()"
+                        (onClick)="baixarPdfGerado()" />
+                    }
+                  </div>
                 </div>
                 <div class="max-h-60 overflow-auto border border-surface-300 dark:border-surface-700 rounded-md p-3 text-xs font-mono grid grid-cols-2 md:grid-cols-4 gap-2 bg-surface-100 dark:bg-surface-800">
                   @for (c of store.generatedCodes(); track c) {
-                    <span class="bg-white dark:bg-surface-700 px-2 py-1 rounded border border-surface-300 dark:border-surface-600 text-surface-900 dark:text-surface-100">{{ c }}</span>
+                    <div class="bg-white dark:bg-surface-700 px-2 py-1 rounded border border-surface-300 dark:border-surface-600 text-surface-900 dark:text-surface-100 flex items-center justify-between gap-1">
+                      <span>{{ c }}</span>
+                      <p-button
+                        icon="pi pi-qrcode"
+                        [rounded]="true"
+                        [text]="true"
+                        size="small"
+                        pTooltip="Ver QR Code"
+                        tooltipPosition="left"
+                        (onClick)="verQrCode(c)" />
+                    </div>
                   }
                 </div>
               </div>
@@ -396,6 +417,27 @@ export class CodigosPage implements OnInit {
   copiarCodigosGerados() {
     const codes = this.store.generatedCodes().join('\n');
     navigator.clipboard.writeText(codes);
+  }
+
+  baixarPdfGerado() {
+    const batchId = this.store.generatedBatchId();
+    if (!batchId) return;
+    this.loadingDownload.set(true);
+    this.codesApi.downloadBatch(batchId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codigos_${batchId}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.loadingDownload.set(false);
+      },
+      error: (err) => {
+        console.error('Erro ao baixar PDF:', err);
+        this.loadingDownload.set(false);
+      },
+    });
   }
 
   // Aba Visualizar
