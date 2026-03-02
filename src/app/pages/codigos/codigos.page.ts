@@ -448,9 +448,19 @@ export class CodigosPage implements OnInit {
 
   async verQrCode(code: string) {
     try {
-      const qrcode = await import('qrcode');
+      const qrcodeModule = await import('qrcode');
+      console.log('QRCode module:', qrcodeModule);
+      console.log('QRCode keys:', Object.keys(qrcodeModule));
+      console.log('QRCode.default:', qrcodeModule.default);
+      console.log('QRCode.toDataURL:', qrcodeModule.toDataURL);
+
+      const toDataURL = qrcodeModule.toDataURL || qrcodeModule.default?.toDataURL;
+      if (!toDataURL) {
+        throw new Error('toDataURL function not found in qrcode module');
+      }
+
       const url = `https://sobinvestigacao.com/pages/ativacao?code=${code}`;
-      const dataUrl = await qrcode.toDataURL(url, { width: 256, margin: 2 });
+      const dataUrl = await toDataURL(url, { width: 256, margin: 2 });
       this.qrDialogCode.set(code);
       this.qrDataUrl.set(dataUrl);
       this.qrDialogVisible.set(true);
