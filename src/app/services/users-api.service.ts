@@ -61,5 +61,13 @@ export class UsersApiService {
       body,
     );
   }
+
+  resetSession(phoneNumber: string | number): Observable<{ success: boolean; message: string }> {
+    const phoneStr = String(phoneNumber).trim();
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.base}/users/${encodeURIComponent(phoneStr)}/reset-session`,
+      {},
+    );
+  }
 }
 

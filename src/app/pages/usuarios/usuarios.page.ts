@@ -208,6 +208,26 @@ import { UsuariosStore } from '../../core/signals/usuarios.store';
                   <p class="text-xs text-green-600 mt-2 m-0">{{ msg }}</p>
                 }
               </div>
+
+              <div class="border-t border-surface-200 pt-4 space-y-3">
+                <p class="text-sm font-medium text-surface-700 m-0">
+                  Ações do jogador
+                </p>
+                <p-button
+                  label="Resetar status do jogador"
+                  icon="pi pi-refresh"
+                  severity="danger"
+                  [outlined]="true"
+                  (onClick)="onResetarSessao()"
+                  [loading]="store.loadingResetSession()"
+                  styleClass="w-full" />
+                @if (store.resetSessionError(); as err) {
+                  <p class="text-xs text-red-600 mt-2 m-0">{{ err }}</p>
+                }
+                @if (store.resetSessionSuccess(); as msg) {
+                  <p class="text-xs text-green-600 mt-2 m-0">{{ msg }}</p>
+                }
+              </div>
             </div>
           }
         }
@@ -272,6 +292,10 @@ export class UsuariosPage {
 
   onAlterarTelefone() {
     this.store.alterarTelefone(this.changeEmailInput, this.changePhoneInput);
+  }
+
+  onResetarSessao() {
+    this.store.resetarSessao();
   }
 }
 

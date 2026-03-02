@@ -19,9 +19,12 @@ export class UsuariosStore {
   readonly loadingMore = signal(false);
   readonly loadingDetail = signal(false);
   readonly loadingChangePhone = signal(false);
+  readonly loadingResetSession = signal(false);
   readonly error = signal<string | null>(null);
   readonly changePhoneError = signal<string | null>(null);
   readonly changePhoneSuccess = signal<string | null>(null);
+  readonly resetSessionError = signal<string | null>(null);
+  readonly resetSessionSuccess = signal<string | null>(null);
 
   readonly selectedPhone = signal<string | null>(null);
   readonly userDetail = signal<UserDetailResponse | null>(null);
@@ -192,6 +195,37 @@ export class UsuariosStore {
   limparMensagens() {
     this.changePhoneError.set(null);
     this.changePhoneSuccess.set(null);
+    this.resetSessionError.set(null);
+    this.resetSessionSuccess.set(null);
+  }
+
+  resetarSessao() {
+    const phone = this.selectedPhone();
+    if (!phone) {
+      this.resetSessionError.set('Telefone não selecionado.');
+      return;
+    }
+
+    this.loadingResetSession.set(true);
+    this.resetSessionError.set(null);
+    this.resetSessionSuccess.set(null);
+
+    this.api
+      .resetSession(phone)
+      .pipe(
+        catchError((err) => {
+          const msg = err?.error?.message || 'Não foi possível resetar a sessão.';
+          this.resetSessionError.set(msg);
+          return of({ success: false, message: '' });
+        }),
+        finalize(() => this.loadingResetSession.set(false)),
+      )
+      .subscribe((res) => {
+        if (res.success) {
+          this.resetSessionError.set(null);
+          this.resetSessionSuccess.set(res.message || 'Sessão resetada com sucesso!');
+        }
+      });
   }
 }
 
