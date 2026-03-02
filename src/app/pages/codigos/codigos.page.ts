@@ -11,7 +11,6 @@ import { DropdownModule } from 'primeng/dropdown';
 import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
-import * as QRCode from 'qrcode';
 import { CodigosStore } from '../../core/signals/codigos.store';
 import { GamesApiService, GameItem } from '../../services/games-api.service';
 import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.service';
@@ -449,8 +448,9 @@ export class CodigosPage implements OnInit {
 
   async verQrCode(code: string) {
     try {
+      const { toDataURL } = await import('qrcode');
       const url = `https://sobinvestigacao.com/pages/ativacao?code=${code}`;
-      const dataUrl = await QRCode.toDataURL(url, { width: 256, margin: 2 });
+      const dataUrl = await toDataURL(url, { width: 256, margin: 2 });
       this.qrDialogCode.set(code);
       this.qrDataUrl.set(dataUrl);
       this.qrDialogVisible.set(true);
