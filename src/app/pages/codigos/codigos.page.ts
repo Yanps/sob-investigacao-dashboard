@@ -448,9 +448,9 @@ export class CodigosPage implements OnInit {
 
   async verQrCode(code: string) {
     try {
-      const { toDataURL } = await import('qrcode');
+      const QRCode = await import('qrcode');
       const url = `https://sobinvestigacao.com/pages/ativacao?code=${code}`;
-      const dataUrl = await toDataURL(url, { width: 256, margin: 2 });
+      const dataUrl = await QRCode.toDataURL(url, { width: 256, margin: 2 });
       this.qrDialogCode.set(code);
       this.qrDataUrl.set(dataUrl);
       this.qrDialogVisible.set(true);
