@@ -1,5 +1,9 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(firebase deploy --only hosting)",
+      "Bash(firebase login --reauth)"
+    ],
     "additionalDirectories": [
       "/Users/brunellicupello/Desktop/Pessoal/SobInvestigacao/sob-investigacao-api"
     ]
