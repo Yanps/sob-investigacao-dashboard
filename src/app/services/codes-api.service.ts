@@ -71,5 +71,12 @@ export class CodesApiService {
   listBatches(): Observable<BatchesListResponse> {
     return this.http.get<BatchesListResponse>(`${this.base}/codes/batches`);
   }
+
+  downloadBatch(batchId: string): Observable<Blob> {
+    return this.http.get(`${this.base}/codes/download`, {
+      params: { batchId },
+      responseType: 'blob',
+    });
+  }
 }
 

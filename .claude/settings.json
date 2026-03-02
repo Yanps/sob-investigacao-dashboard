@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(firebase deploy --only hosting)",
-      "Bash(firebase login --reauth)"
+      "Bash(firebase login --reauth)",
+      "Bash(pnpm add pdf-lib qrcode jszip)",
+      "Bash(pnpm add -D @types/qrcode)",
+      "Bash(pnpm run build)",
+      "Bash(npm install qrcode)",
+      "Bash(npm install --save-dev @types/qrcode)",
+      "Bash(npm cache clean --force)",
+      "Bash(npm install qrcode --legacy-peer-deps)",
+      "Bash(npm install --save-dev @types/qrcode --legacy-peer-deps)",
+      "Bash(npm install)",
+      "Bash(pnpm add qrcode)",
+      "Bash(git -C /Users/brunellicupello/Desktop/Pessoal/SobInvestigacao/sob-investigacao-api log --oneline -5)"
     ],
     "additionalDirectories": [
       "/Users/brunellicupello/Desktop/Pessoal/SobInvestigacao/sob-investigacao-api"

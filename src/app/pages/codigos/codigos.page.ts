@@ -10,6 +10,8 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
 import { TabViewModule } from 'primeng/tabview';
 import { TooltipModule } from 'primeng/tooltip';
+import { DialogModule } from 'primeng/dialog';
+import * as QRCode from 'qrcode';
 import { CodigosStore } from '../../core/signals/codigos.store';
 import { GamesApiService, GameItem } from '../../services/games-api.service';
 import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.service';
@@ -29,6 +31,7 @@ import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.s
     DropdownModule,
     TabViewModule,
     TooltipModule,
+    DialogModule,
   ],
   template: `
     <div class="space-y-6">
@@ -134,6 +137,7 @@ import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.s
                   icon="pi pi-file-pdf"
                   label="Baixar PDF"
                   severity="secondary"
+                  [loading]="loadingDownload()"
                   [disabled]="!selectedBatchIdView || !viewCodes().length"
                   (onClick)="baixarPdf()" />
                 <p-button
@@ -165,14 +169,24 @@ import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.s
                     <tr>
                       <td class="font-mono text-xs">{{ code.code }}</td>
                       <td>
-                        <p-button
-                          icon="pi pi-copy"
-                          [rounded]="true"
-                          [text]="true"
-                          size="small"
-                          pTooltip="Copiar código"
-                          tooltipPosition="left"
-                          (onClick)="copiarCodigo(code.code)" />
+                        <div class="flex gap-1">
+                          <p-button
+                            icon="pi pi-qrcode"
+                            [rounded]="true"
+                            [text]="true"
+                            size="small"
+                            pTooltip="Ver QR Code"
+                            tooltipPosition="left"
+                            (onClick)="verQrCode(code.code)" />
+                          <p-button
+                            icon="pi pi-copy"
+                            [rounded]="true"
+                            [text]="true"
+                            size="small"
+                            pTooltip="Copiar código"
+                            tooltipPosition="left"
+                            (onClick)="copiarCodigo(code.code)" />
+                        </div>
                       </td>
                     </tr>
                   </ng-template>
@@ -266,6 +280,20 @@ import { CodesApiService, BatchItem, CodeItem } from '../../services/codes-api.s
           </div>
         </p-tabPanel>
       </p-tabView>
+
+      <!-- QR Code Dialog -->
+      <p-dialog
+        header="QR Code"
+        [(visible)]="qrDialogVisible"
+        [modal]="true"
+        [style]="{ width: '320px' }">
+        <div class="flex flex-col items-center gap-3 py-2">
+          @if (qrDataUrl()) {
+            <img [src]="qrDataUrl()" alt="QR Code" class="w-48 h-48" />
+          }
+          <span class="font-mono text-sm text-surface-700">{{ qrDialogCode() }}</span>
+        </div>
+      </p-dialog>
     </div>
   `,
 })
@@ -282,12 +310,18 @@ export class CodigosPage implements OnInit {
   // Aba Visualizar
   readonly viewCodes = signal<CodeItem[]>([]);
   readonly loadingViewCodes = signal(false);
+  readonly loadingDownload = signal(false);
   selectedBatchIdView = '';
 
   // Aba Detalhes
   readonly detailsCodes = signal<CodeItem[]>([]);
   readonly loadingDetailsCodes = signal(false);
   selectedBatchIdDetails = '';
+
+  // QR Code Dialog
+  readonly qrDialogVisible = signal(false);
+  readonly qrDialogCode = signal('');
+  readonly qrDataUrl = signal('');
 
   // Aba Gerar
   quantityInput = 1;
@@ -394,18 +428,35 @@ export class CodigosPage implements OnInit {
   }
 
   baixarPdf() {
-    const codes = this.viewCodes();
-    if (!codes.length) return;
+    if (!this.selectedBatchIdView) return;
+    this.loadingDownload.set(true);
+    this.codesApi.downloadBatch(this.selectedBatchIdView).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `codigos_${this.selectedBatchIdView}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.loadingDownload.set(false);
+      },
+      error: (err) => {
+        console.error('Erro ao baixar PDF:', err);
+        this.loadingDownload.set(false);
+      },
+    });
+  }
 
-    // Gera um PDF simples com os códigos
-    const content = codes.map((c) => c.code).join('\n');
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `codigos_${this.selectedBatchIdView}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async verQrCode(code: string) {
+    try {
+      const url = `https://sobinvestigacao.com/pages/ativacao?code=${code}`;
+      const dataUrl = await QRCode.toDataURL(url, { width: 256, margin: 2 });
+      this.qrDialogCode.set(code);
+      this.qrDataUrl.set(dataUrl);
+      this.qrDialogVisible.set(true);
+    } catch (error) {
+      console.error('Erro ao gerar QR Code:', error);
+    }
   }
 
   // Aba Detalhes
