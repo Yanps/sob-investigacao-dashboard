@@ -449,12 +449,10 @@ export class CodigosPage implements OnInit {
   async verQrCode(code: string) {
     try {
       const qrcodeModule = await import('qrcode');
-      console.log('QRCode module:', qrcodeModule);
-      console.log('QRCode keys:', Object.keys(qrcodeModule));
-      console.log('QRCode.default:', qrcodeModule.default);
-      console.log('QRCode.toDataURL:', qrcodeModule.toDataURL);
 
+      // Support both direct export and default export patterns
       const toDataURL = qrcodeModule.toDataURL || qrcodeModule.default?.toDataURL;
+
       if (!toDataURL) {
         throw new Error('toDataURL function not found in qrcode module');
       }
